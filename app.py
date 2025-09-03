@@ -74,90 +74,107 @@ disease_dict = {
 molecule = st.text_input("Enter Molecule (e.g., Metformin):")
 num_names = st.slider("How many names to generate?", 5, 50, 20)
 
-# Detect disease & usage (before button press)
-mol_cap = molecule.capitalize()
-if mol_cap in therapeutic_map:
-    disease = therapeutic_map[mol_cap]["disease"]
-    usage = therapeutic_map[mol_cap]["usage"]
-elif molecule.strip() != "":
-    disease = st.selectbox(
-        f"Select therapeutic area for {mol_cap}:",
-        list(disease_dict.keys())
-    )
-    usage = st.text_input(
-        "Enter usage (e.g., 'Kidney disease treatment'):",
-        value="User-defined usage"
-    )
+# Normalize molecule input
+mol_key = molecule.strip().title()
+mol_cap = molecule.strip().capitalize()
+
+# Default demo molecule if nothing entered
+if molecule.strip() == "":
+    mol_key, mol_cap = "Paracetamol", "Paracetamol"
+    disease = therapeutic_map[mol_key]["disease"]
+    usage = therapeutic_map[mol_key]["usage"]
 else:
-    disease, usage = None, None
+    if mol_key in therapeutic_map:
+        disease = therapeutic_map[mol_key]["disease"]
+        usage = therapeutic_map[mol_key]["usage"]
+    else:
+        disease = st.selectbox(
+            f"Select therapeutic area for {mol_cap}:",
+            list(disease_dict.keys())
+        )
+        usage = st.text_input(
+            "Enter usage (e.g., 'Kidney disease treatment'):",
+            value="User-defined usage"
+        )
+
+# ------------------------
+# Name Generation Function
+# ------------------------
+def generate_names(prefixes, suffixes, num_names):
+    generated = set()
+    max_possible = len(prefixes) * len(suffixes)
+    target = min(num_names * 3, max_possible)
+
+    while len(generated) < target:
+        prefix = random.choice(prefixes)
+        suffix = random.choice(suffixes)
+        new_name = (prefix + suffix).capitalize()
+        generated.add(new_name)
+
+    return generated, max_possible
 
 # ------------------------
 # Generate Smart Names
 # ------------------------
-if st.button("Generate Names"):
-    if molecule.strip() == "":
-        st.warning("Please enter a molecule name!")
-    else:
-        prefixes, suffixes = disease_dict.get(disease, disease_dict["General"])
+if st.button("Generate Names") or molecule.strip() == "":  # auto-run demo
+    prefixes, suffixes = disease_dict.get(disease, disease_dict["General"])
+    generated, max_possible = generate_names(prefixes, suffixes, num_names)
 
-        generated = set()
-        while len(generated) < num_names * 3:
-            prefix = random.choice(prefixes)
-            suffix = random.choice(suffixes)
-            new_name = (prefix + suffix).capitalize()
-            generated.add(new_name)
+    # Info if fewer names possible
+    if max_possible < num_names:
+        st.info(f"Only {max_possible} unique names possible for {disease}. Showing all available.")
 
-        # Categorize by length
-        short_names = [n for n in generated if 4 <= len(n) <= 6]
-        medium_names = [n for n in generated if 7 <= len(n) <= 8]
-        long_names = [n for n in generated if len(n) > 8]
+    # Categorize by length
+    short_names = [n for n in generated if 4 <= len(n) <= 6]
+    medium_names = [n for n in generated if 7 <= len(n) <= 8]
+    long_names = [n for n in generated if len(n) > 8]
 
-        # Trademark portals
-        india_link = "https://tmrsearch.ipindia.gov.in/tmrpublicsearch/"
-        us_link = "https://www.uspto.gov/trademarks/search"
-        eu_link = "https://euipo.europa.eu/ohimportal/en/rcy-search"
+    # Trademark portals
+    india_link = "https://tmrsearch.ipindia.gov.in/tmrpublicsearch/"
+    us_link = "https://www.uspto.gov/trademarks/search"
+    eu_link = "https://euipo.europa.eu/ohimportal/en/rcy-search"
 
-        # Function to display results as card
-        def display_name(name, mol_cap, usage, disease, india_link, us_link, eu_link):
-            st.markdown(
-                f"""
-                <div style="
-                    border: 2px solid #2E86C1; 
-                    border-radius: 10px; 
-                    padding: 15px; 
-                    margin: 10px 0; 
-                    background-color: #F8F9F9;
-                ">
-                    <h3 style="color:#2E86C1;">💊 {name}</h3>
-                    <p><b>Molecule:</b> {mol_cap}</p>
-                    <p><b>Usage:</b> {usage} ({disease})</p>
-                    <p><b>Trademark:</b> 
-                        <a href="{india_link}" target="_blank">India</a> | 
-                        <a href="{us_link}" target="_blank">US</a> | 
-                        <a href="{eu_link}" target="_blank">EU</a>
-                    </p>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+    # Display function
+    def display_name(name, mol_cap, usage, disease, india_link, us_link, eu_link):
+        st.markdown(
+            f"""
+            <div style="
+                border: 2px solid #2E86C1; 
+                border-radius: 10px; 
+                padding: 15px; 
+                margin: 10px 0; 
+                background-color: #F8F9F9;
+            ">
+                <h3 style="color:#2E86C1;">💊 {name}</h3>
+                <p><b>Molecule:</b> {mol_cap}</p>
+                <p><b>Usage:</b> {usage} ({disease})</p>
+                <p><b>Trademark:</b> 
+                    <a href="{india_link}" target="_blank">India</a> | 
+                    <a href="{us_link}" target="_blank">US</a> | 
+                    <a href="{eu_link}" target="_blank">EU</a>
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-        # Show results
-        st.success(f"Generated smart names for {mol_cap} ({disease}):")
+    # Show results
+    st.success(f"Generated smart names for {mol_cap} ({disease}):")
 
-        if short_names:
-            st.markdown("### 🔹 4–6 Letters")
-            for n in short_names[:num_names]:
-                display_name(n, mol_cap, usage, disease, india_link, us_link, eu_link)
+    if short_names:
+        st.markdown("### 🔹 4–6 Letters")
+        for n in short_names[:num_names]:
+            display_name(n, mol_cap, usage, disease, india_link, us_link, eu_link)
 
-        if medium_names:
-            st.markdown("### 🔹 7–8 Letters")
-            for n in medium_names[:num_names]:
-                display_name(n, mol_cap, usage, disease, india_link, us_link, eu_link)
+    if medium_names:
+        st.markdown("### 🔹 7–8 Letters")
+        for n in medium_names[:num_names]:
+            display_name(n, mol_cap, usage, disease, india_link, us_link, eu_link)
 
-        if long_names:
-            st.markdown("### 🔹 9+ Letters")
-            for n in long_names[:num_names]:
-                display_name(n, mol_cap, usage, disease, india_link, us_link, eu_link)
+    if long_names:
+        st.markdown("### 🔹 9+ Letters")
+        for n in long_names[:num_names]:
+            display_name(n, mol_cap, usage, disease, india_link, us_link, eu_link)
 
-        # Reminder
-        st.info("💡 Copy the brand name first, then paste it in the trademark portal search box.")
+    # Reminder
+    st.info("💡 Copy the brand name first, then paste it in the trademark portal search box.")
