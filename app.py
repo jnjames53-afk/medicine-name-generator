@@ -1,5 +1,26 @@
 import streamlit as st
 import random
+from PIL import Image
+
+# ------------------------
+# Page Config
+# ------------------------
+st.set_page_config(page_title="Myra Healthcare", page_icon="💊", layout="centered")
+
+# ------------------------
+# Logo + Branding
+# ------------------------
+try:
+    logo = Image.open("logo.png")  # upload logo.png to your repo
+    st.image(logo, width=200)
+except:
+    st.write("")
+
+st.markdown(
+    "<h1 style='text-align: center; color: #2E86C1;'>Myra Healthcare™</h1>",
+    unsafe_allow_html=True
+)
+st.write("✨ Innovative Medicine Name Generator ✨")
 
 # ------------------------
 # Prefixes & Suffixes by style
@@ -24,20 +45,15 @@ style_sets = {
 }
 
 # ------------------------
-# Streamlit UI
+# User Inputs
 # ------------------------
-st.title("💊 Medicine Brand Name Generator")
-
-# Molecule input
 molecule = st.text_input("Enter Molecule (e.g., Metformin):")
-
-# Style selection
 style = st.selectbox("Choose Name Style:", list(style_sets.keys()))
-
-# Number of names
 num_names = st.slider("How many names to generate?", 5, 50, 20)
 
-# Generate button
+# ------------------------
+# Generate Names
+# ------------------------
 if st.button("Generate Names"):
     if molecule.strip() == "":
         st.warning("Please enter a molecule name!")
@@ -52,13 +68,9 @@ if st.button("Generate Names"):
             new_name = prefix + molecule[:3].capitalize() + suffix
             generated.add(new_name)
 
+        # ✅ Display results with Google search links
         st.success(f"Generated {len(generated)} unique {style} names:")
 
-for name in generated:
-    search_url = f"https://www.google.com/search?q={name}+medicine"
-    st.markdown(f"✅ **{name}** → [Check availability]({search_url})")
-
-# Optional: availability checker
-st.markdown("### 🌍 Availability Check (Google Search)")
-if molecule:
-    st.markdown(f"[Search Google for '{molecule} medicine'](https://www.google.com/search?q={molecule}+medicine)")
+        for name in generated:
+            search_url = f"https://www.google.com/search?q={name}+medicine"
+            st.markdown(f"✅ **{name}** → [Check availability]({search_url})")
