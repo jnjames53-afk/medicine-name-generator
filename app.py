@@ -53,8 +53,10 @@ if st.button("Generate Names"):
             generated.add(new_name)
 
         st.success(f"Generated {len(generated)} unique {style} names:")
-        for name in generated:
-            st.write("✅", name)
+
+for name in generated:
+    search_url = f"https://www.google.com/search?q={name}+medicine"
+    st.markdown(f"✅ **{name}** → [Check availability]({search_url})")
 
 # Optional: availability checker
 st.markdown("### 🌍 Availability Check (Google Search)")
