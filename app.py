@@ -74,6 +74,23 @@ disease_dict = {
 molecule = st.text_input("Enter Molecule (e.g., Metformin):")
 num_names = st.slider("How many names to generate?", 5, 50, 20)
 
+# Detect disease & usage (before button press)
+mol_cap = molecule.capitalize()
+if mol_cap in therapeutic_map:
+    disease = therapeutic_map[mol_cap]["disease"]
+    usage = therapeutic_map[mol_cap]["usage"]
+elif molecule.strip() != "":
+    disease = st.selectbox(
+        f"Select therapeutic area for {mol_cap}:",
+        list(disease_dict.keys())
+    )
+    usage = st.text_input(
+        "Enter usage (e.g., 'Kidney disease treatment'):",
+        value="User-defined usage"
+    )
+else:
+    disease, usage = None, None
+
 # ------------------------
 # Generate Smart Names
 # ------------------------
@@ -81,24 +98,6 @@ if st.button("Generate Names"):
     if molecule.strip() == "":
         st.warning("Please enter a molecule name!")
     else:
-        mol_cap = molecule.capitalize()
-
-        # Case 1: Molecule in dictionary
-        if mol_cap in therapeutic_map:
-            disease = therapeutic_map[mol_cap]["disease"]
-            usage = therapeutic_map[mol_cap]["usage"]
-
-        # Case 2: Molecule not in dictionary → ask user
-        else:
-            disease = st.selectbox(
-                f"Select therapeutic area for {mol_cap}:",
-                list(disease_dict.keys())
-            )
-            usage = st.text_input(
-                "Enter usage (e.g., 'Kidney disease treatment'):",
-                value="User-defined usage"
-            )
-
         prefixes, suffixes = disease_dict.get(disease, disease_dict["General"])
 
         generated = set()
